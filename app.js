@@ -1,7 +1,8 @@
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
-require('dotenv').config();
 
+// Import routes
 const authRoutes = require('./routes/authRoutes');
 
 const app = express();
@@ -19,13 +20,8 @@ app.get('/', (req, res) => {
     res.json({ message: 'Welcome to Procurement System API' });
 });
 
-// 404 handler
-app.use((req, res) => {
-    res.status(404).json({ success: false, message: 'Route not found' });
-});
-
+// Start Server
 const PORT = process.env.PORT || 3000;
-
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 });

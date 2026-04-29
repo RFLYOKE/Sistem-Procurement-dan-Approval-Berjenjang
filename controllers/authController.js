@@ -5,23 +5,27 @@ const userModel = require('../models/userModel');
 const { successResponse, errorResponse } = require('../utils/response');
 
 const register = async (req, res) => {
-    try {
-        const errors = validationResult(req);
-        if (!errors.isEmpty()) {
-            return errorResponse(res, errors.array()[0].msg, 400);
-        }
+    // Check validation errors
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return errorResponse(res, errors.array()[0].msg, 400);
+    }
 
+    try {
         const { name, email, password, role, department } = req.body;
 
+        // Check if email already exists
         const existingUser = await userModel.findUserByEmail(email);
         if (existingUser) {
-            return errorResponse(res, 'Email sudah terdaftar.', 400);
+            return errorResponse(res, 'Email already registered', 400);
         }
 
+        // Hash password
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
 
-        const newUserId = await userModel.createUser({
+        // Save user to database
+        const userId = await userModel.createUser({
             name,
             email,
             password: hashedPassword,
@@ -29,37 +33,41 @@ const register = async (req, res) => {
             department
         });
 
-        const newUser = await userModel.findUserById(newUserId);
+        const newUser = await userModel.findUserById(userId);
+        
+        // Remove password from response
+        delete newUser.password;
 
-        return successResponse(res, 'Registrasi berhasil', newUser, 201);
+        return successResponse(res, 'User registered successfully', newUser, 201);
     } catch (error) {
-        console.error('Register error:', error);
-        return errorResponse(res, 'Terjadi kesalahan pada server', 500);
+        console.error('Error in register:', error);
+        return errorResponse(res, 'Internal server error', 500);
     }
 };
 
 const login = async (req, res) => {
+    // Check validation errors
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return errorResponse(res, errors.array()[0].msg, 400);
+    }
+
     try {
         const { email, password } = req.body;
 
-        if (!email || !password) {
-            return errorResponse(res, 'Email dan password wajib diisi', 400);
-        }
-
+        // Check if user exists
         const user = await userModel.findUserByEmail(email);
         if (!user) {
-            return errorResponse(res, 'Email atau password salah', 401);
+            return errorResponse(res, 'Invalid email or password', 401);
         }
 
+        // Check password
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
-            return errorResponse(res, 'Email atau password salah', 401);
+            return errorResponse(res, 'Invalid email or password', 401);
         }
 
-        if (!user.is_active) {
-            return errorResponse(res, 'Akun Anda tidak aktif', 403);
-        }
-
+        // Generate JWT token
         const payload = {
             id: user.id,
             name: user.name,
@@ -72,39 +80,41 @@ const login = async (req, res) => {
             expiresIn: process.env.JWT_EXPIRES_IN || '1d'
         });
 
-        // Hapus password dari response
-        delete user.password;
+        // Remove password before sending user data
+        const userData = { ...user };
+        delete userData.password;
 
-        return successResponse(res, 'Login berhasil', { token, user });
+        return successResponse(res, 'Login successful', { token, user: userData });
     } catch (error) {
-        console.error('Login error:', error);
-        return errorResponse(res, 'Terjadi kesalahan pada server', 500);
+        console.error('Error in login:', error);
+        return errorResponse(res, 'Internal server error', 500);
     }
 };
 
 const getProfile = async (req, res) => {
     try {
-        const userId = req.user.id;
-        const user = await userModel.findUserById(userId);
-
+        // req.user is set by authMiddleware
+        const user = await userModel.findUserById(req.user.id);
+        
         if (!user) {
-            return errorResponse(res, 'User tidak ditemukan', 404);
+            return errorResponse(res, 'User not found', 404);
         }
 
-        return successResponse(res, 'Profil berhasil diambil', user);
+        delete user.password;
+        return successResponse(res, 'Profile retrieved successfully', user);
     } catch (error) {
-        console.error('Get profile error:', error);
-        return errorResponse(res, 'Terjadi kesalahan pada server', 500);
+        console.error('Error in getProfile:', error);
+        return errorResponse(res, 'Internal server error', 500);
     }
 };
 
 const getAllUsers = async (req, res) => {
     try {
         const users = await userModel.getAllUsers();
-        return successResponse(res, 'Daftar user berhasil diambil', users);
+        return successResponse(res, 'Users retrieved successfully', users);
     } catch (error) {
-        console.error('Get all users error:', error);
-        return errorResponse(res, 'Terjadi kesalahan pada server', 500);
+        console.error('Error in getAllUsers:', error);
+        return errorResponse(res, 'Internal server error', 500);
     }
 };
 

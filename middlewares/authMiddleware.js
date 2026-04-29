@@ -5,18 +5,20 @@ const verifyToken = (req, res, next) => {
     const authHeader = req.headers.authorization;
 
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-        return errorResponse(res, 'Akses ditolak. Token tidak ditemukan.', 401);
+        return errorResponse(res, 'Access denied. No token provided.', 401);
     }
 
     const token = authHeader.split(' ')[1];
 
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        req.user = decoded; // { id, name, email, role, department }
+        req.user = decoded; // Inject decoded user data into request
         next();
-    } catch (error) {
-        return errorResponse(res, 'Token tidak valid atau sudah kadaluarsa.', 401);
+    } catch (err) {
+        return errorResponse(res, 'Invalid or expired token.', 401);
     }
 };
 
-module.exports = { verifyToken };
+module.exports = {
+    verifyToken
+};

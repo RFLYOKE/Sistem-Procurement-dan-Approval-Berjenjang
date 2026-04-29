@@ -1,15 +1,18 @@
 const successResponse = (res, message, data = null, statusCode = 200) => {
-    return res.status(statusCode).json({
+    const response = {
         success: true,
         message,
-        data
-    });
+    };
+    if (data !== null) {
+        response.data = data;
+    }
+    return res.status(statusCode).json(response);
 };
 
 const errorResponse = (res, message, statusCode = 400) => {
     return res.status(statusCode).json({
         success: false,
-        message
+        message,
     });
 };
 

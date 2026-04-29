@@ -1,21 +1,46 @@
 const express = require('express');
-const { check } = require('express-validator');
+const { body } = require('express-validator');
 const authController = require('../controllers/authController');
 const { verifyToken } = require('../middlewares/authMiddleware');
 const { authorizeRoles } = require('../middlewares/roleMiddleware');
 
 const router = express.Router();
 
-const registerValidation = [
-    check('name', 'Nama wajib diisi').not().isEmpty(),
-    check('email', 'Email tidak valid').isEmail(),
-    check('password', 'Password minimal 6 karakter').isLength({ min: 6 }),
-    check('role', 'Role tidak valid').optional().isIn(['admin', 'requester', 'supervisor', 'finance', 'purchasing'])
-];
+// Register Route
+router.post(
+    '/register',
+    [
+        body('name').notEmpty().withMessage('Name is required'),
+        body('email').isEmail().withMessage('Valid email is required'),
+        body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters long'),
+        body('role').optional().isIn(['admin', 'requester', 'supervisor', 'finance', 'purchasing']).withMessage('Invalid role')
+    ],
+    authController.register
+);
 
-router.post('/register', registerValidation, authController.register);
-router.post('/login', authController.login);
-router.get('/profile', verifyToken, authController.getProfile);
-router.get('/users', verifyToken, authorizeRoles('admin'), authController.getAllUsers);
+// Login Route
+router.post(
+    '/login',
+    [
+        body('email').notEmpty().withMessage('Email is required'),
+        body('password').notEmpty().withMessage('Password is required')
+    ],
+    authController.login
+);
+
+// Get Profile Route
+router.get(
+    '/profile',
+    verifyToken,
+    authController.getProfile
+);
+
+// Get All Users Route (Admin only)
+router.get(
+    '/users',
+    verifyToken,
+    authorizeRoles('admin'),
+    authController.getAllUsers
+);
 
 module.exports = router;
