@@ -4,6 +4,9 @@ const cors = require('cors');
 
 // Import routes
 const authRoutes = require('./routes/authRoutes');
+const itemRoutes = require('./routes/itemRoutes');
+const vendorRoutes = require('./routes/vendorRoutes');
+const procurementRoutes = require('./routes/procurementRoutes');
 
 const app = express();
 
@@ -14,6 +17,9 @@ app.use(express.urlencoded({ extended: true }));
 
 // Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/items', itemRoutes);
+app.use('/api/vendors', vendorRoutes);
+app.use('/api/procurements', procurementRoutes);
 
 // Base route
 app.get('/', (req, res) => {

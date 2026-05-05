@@ -19,6 +19,15 @@ const verifyToken = (req, res, next) => {
     }
 };
 
+const authorizeRoles = (...allowedRoles) => {
+    return (req, res, next) => {
+        if (!req.user || !allowedRoles.includes(req.user.role)) {
+            return errorResponse(res, 'Access denied. You do not have permission.', 403);
+        }
+        next();
+    };
+};
 module.exports = {
-    verifyToken
+    verifyToken,
+    authorizeRoles
 };
