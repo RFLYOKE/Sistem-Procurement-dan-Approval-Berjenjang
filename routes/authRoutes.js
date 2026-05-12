@@ -43,4 +43,11 @@ router.get(
     authController.getAllUsers
 );
 
+// Logout Route
+router.post(
+    '/logout',
+    verifyToken,
+    authController.logout
+);
+
 module.exports = router;

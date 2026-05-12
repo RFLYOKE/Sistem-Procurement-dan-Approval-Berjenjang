@@ -118,9 +118,21 @@ const getAllUsers = async (req, res) => {
     }
 };
 
+const logout = async (req, res) => {
+    try {
+        // Since we are using standard stateless JWT, logout is primarily handled 
+        // on the client side by deleting the token. We just return a success response.
+        return successResponse(res, 'Logout successful. Please delete your token on the client side.');
+    } catch (error) {
+        console.error('Error in logout:', error);
+        return errorResponse(res, 'Internal server error', 500);
+    }
+};
+
 module.exports = {
     register,
     login,
+    logout,
     getProfile,
     getAllUsers
 };

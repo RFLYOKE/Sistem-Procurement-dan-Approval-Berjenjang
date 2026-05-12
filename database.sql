@@ -1,39 +1,42 @@
+-- ============================================================
+-- DATABASE: Sistem Procurement dan Approval Berjenjang
+-- Jalankan file ini untuk setup lengkap dari awal
+-- ============================================================
+
 CREATE DATABASE IF NOT EXISTS procurement_db;
 USE procurement_db;
 
+-- ============================================================
+-- BAGIAN 1: CREATE TABLES
+-- ============================================================
+
 CREATE TABLE IF NOT EXISTS users (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(100) NOT NULL,
-    email VARCHAR(100) NOT NULL UNIQUE,
-    password VARCHAR(255) NOT NULL,
-    role ENUM('admin', 'requester', 'supervisor', 'finance', 'purchasing') NOT NULL DEFAULT 'requester',
+    id         INT AUTO_INCREMENT PRIMARY KEY,
+    name       VARCHAR(100) NOT NULL,
+    email      VARCHAR(100) NOT NULL UNIQUE,
+    password   VARCHAR(255) NOT NULL,
+    role       ENUM('admin','requester','supervisor','finance','purchasing') NOT NULL DEFAULT 'requester',
     department VARCHAR(100),
-    is_active BOOLEAN DEFAULT TRUE,
+    is_active  BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
-----------------------------------------------------
--- ENTITAS 1: Master Barang/Jasa
-----------------------------------------------------
 CREATE TABLE IF NOT EXISTS items (
-    id          INT AUTO_INCREMENT PRIMARY KEY,
-    code        VARCHAR(50)  NOT NULL UNIQUE,
-    name        VARCHAR(200) NOT NULL,
-    description TEXT,
-    category    ENUM('barang','jasa') NOT NULL,
-    unit        VARCHAR(50)  NOT NULL,
+    id              INT AUTO_INCREMENT PRIMARY KEY,
+    code            VARCHAR(50)  NOT NULL UNIQUE,
+    name            VARCHAR(200) NOT NULL,
+    description     TEXT,
+    category        ENUM('barang','jasa') NOT NULL,
+    unit            VARCHAR(50)  NOT NULL,
     estimated_price DECIMAL(15,2) DEFAULT 0,
-    is_active   BOOLEAN      DEFAULT TRUE,
-    created_by  INT,
-    created_at  TIMESTAMP    DEFAULT CURRENT_TIMESTAMP,
-    updated_at  TIMESTAMP    DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    is_active       BOOLEAN DEFAULT TRUE,
+    created_by      INT,
+    created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (created_by) REFERENCES users(id)
 );
 
-----------------------------------------------------
--- ENTITAS 2: Master Vendor
-----------------------------------------------------
 CREATE TABLE IF NOT EXISTS vendors (
     id                INT AUTO_INCREMENT PRIMARY KEY,
     code              VARCHAR(50)  NOT NULL UNIQUE,
@@ -47,16 +50,13 @@ CREATE TABLE IF NOT EXISTS vendors (
     bank_account      VARCHAR(50),
     bank_account_name VARCHAR(100),
     category          VARCHAR(100),
-    is_active         BOOLEAN   DEFAULT TRUE,
+    is_active         BOOLEAN DEFAULT TRUE,
     created_by        INT,
     created_at        TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at        TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (created_by) REFERENCES users(id)
 );
 
-----------------------------------------------------
--- ENTITAS 3: Pengajuan Pengadaan (header)
-----------------------------------------------------
 CREATE TABLE IF NOT EXISTS procurement_requests (
     id                    INT AUTO_INCREMENT PRIMARY KEY,
     request_number        VARCHAR(50) NOT NULL UNIQUE,
@@ -66,11 +66,8 @@ CREATE TABLE IF NOT EXISTS procurement_requests (
     department            VARCHAR(100),
     required_date         DATE,
     total_estimated_price DECIMAL(15,2) DEFAULT 0,
-    status ENUM(
-        'draft','submitted','approved_supervisor',
-        'approved_finance','approved_purchasing',
-        'rejected','purchased','received'
-    ) NOT NULL DEFAULT 'draft',
+    status ENUM('draft','submitted','approved_supervisor','approved_finance',
+                'approved_purchasing','rejected','purchased','received') NOT NULL DEFAULT 'draft',
     priority ENUM('low','medium','high') DEFAULT 'medium',
     notes    TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -78,9 +75,6 @@ CREATE TABLE IF NOT EXISTS procurement_requests (
     FOREIGN KEY (requester_id) REFERENCES users(id)
 );
 
-----------------------------------------------------
--- RELASI: Detail Item per Pengajuan
-----------------------------------------------------
 CREATE TABLE IF NOT EXISTS procurement_request_items (
     id              INT AUTO_INCREMENT PRIMARY KEY,
     request_id      INT NOT NULL,
@@ -88,18 +82,13 @@ CREATE TABLE IF NOT EXISTS procurement_request_items (
     quantity        DECIMAL(10,2) NOT NULL,
     unit            VARCHAR(50),
     estimated_price DECIMAL(15,2) NOT NULL,
-    total_price     DECIMAL(15,2) GENERATED ALWAYS AS
-                    (quantity * estimated_price) STORED,
+    total_price     DECIMAL(15,2) GENERATED ALWAYS AS (quantity * estimated_price) STORED,
     notes           TEXT,
     created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (request_id) REFERENCES procurement_requests(id)
-        ON DELETE CASCADE,
-    FOREIGN KEY (item_id) REFERENCES items(id)
+    FOREIGN KEY (request_id) REFERENCES procurement_requests(id) ON DELETE CASCADE,
+    FOREIGN KEY (item_id)    REFERENCES items(id)
 );
 
-----------------------------------------------------
--- TABEL: Riwayat Approval Berjenjang
-----------------------------------------------------
 CREATE TABLE IF NOT EXISTS approval_histories (
     id            INT AUTO_INCREMENT PRIMARY KEY,
     request_id    INT NOT NULL,
@@ -114,9 +103,6 @@ CREATE TABLE IF NOT EXISTS approval_histories (
     FOREIGN KEY (approver_id) REFERENCES users(id)
 );
 
-----------------------------------------------------
--- TABEL: Purchase Orders (header)
-----------------------------------------------------
 CREATE TABLE IF NOT EXISTS purchase_orders (
     id                     INT AUTO_INCREMENT PRIMARY KEY,
     po_number              VARCHAR(50) NOT NULL UNIQUE,
@@ -126,22 +112,17 @@ CREATE TABLE IF NOT EXISTS purchase_orders (
     po_date                DATE NOT NULL,
     expected_delivery_date DATE,
     total_amount           DECIMAL(15,2) NOT NULL DEFAULT 0,
-    status ENUM('draft','sent','confirmed','completed','cancelled')
-           DEFAULT 'draft',
+    status ENUM('draft','sent','confirmed','completed','cancelled') DEFAULT 'draft',
     payment_terms          VARCHAR(100),
     delivery_address       TEXT,
     notes                  TEXT,
-    created_at             TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at             TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                           ON UPDATE CURRENT_TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (request_id) REFERENCES procurement_requests(id),
     FOREIGN KEY (vendor_id)  REFERENCES vendors(id),
     FOREIGN KEY (created_by) REFERENCES users(id)
 );
 
-----------------------------------------------------
--- TABEL: Detail Item per Purchase Order
-----------------------------------------------------
 CREATE TABLE IF NOT EXISTS purchase_order_items (
     id          INT AUTO_INCREMENT PRIMARY KEY,
     po_id       INT NOT NULL,
@@ -149,17 +130,12 @@ CREATE TABLE IF NOT EXISTS purchase_order_items (
     quantity    DECIMAL(10,2) NOT NULL,
     unit        VARCHAR(50),
     unit_price  DECIMAL(15,2) NOT NULL,
-    total_price DECIMAL(15,2) GENERATED ALWAYS AS
-                (quantity * unit_price) STORED,
+    total_price DECIMAL(15,2) GENERATED ALWAYS AS (quantity * unit_price) STORED,
     notes       TEXT,
-    FOREIGN KEY (po_id)    REFERENCES purchase_orders(id)
-                           ON DELETE CASCADE,
-    FOREIGN KEY (item_id)  REFERENCES items(id)
+    FOREIGN KEY (po_id)   REFERENCES purchase_orders(id) ON DELETE CASCADE,
+    FOREIGN KEY (item_id) REFERENCES items(id)
 );
 
-----------------------------------------------------
--- TABEL: Goods Receipts (penerimaan barang)
-----------------------------------------------------
 CREATE TABLE IF NOT EXISTS goods_receipts (
     id            INT AUTO_INCREMENT PRIMARY KEY,
     gr_number     VARCHAR(50) NOT NULL UNIQUE,
@@ -175,9 +151,6 @@ CREATE TABLE IF NOT EXISTS goods_receipts (
     FOREIGN KEY (received_by) REFERENCES users(id)
 );
 
-----------------------------------------------------
--- TABEL: Detail Item per Goods Receipt
-----------------------------------------------------
 CREATE TABLE IF NOT EXISTS goods_receipt_items (
     id                INT AUTO_INCREMENT PRIMARY KEY,
     gr_id             INT NOT NULL,
@@ -186,8 +159,37 @@ CREATE TABLE IF NOT EXISTS goods_receipt_items (
     quantity_ordered  DECIMAL(10,2),
     quantity_received DECIMAL(10,2) NOT NULL,
     condition_notes   TEXT,
-    FOREIGN KEY (gr_id)      REFERENCES goods_receipts(id)
-                             ON DELETE CASCADE,
+    FOREIGN KEY (gr_id)      REFERENCES goods_receipts(id) ON DELETE CASCADE,
     FOREIGN KEY (item_id)    REFERENCES items(id),
     FOREIGN KEY (po_item_id) REFERENCES purchase_order_items(id)
 );
+
+-- ============================================================
+-- BAGIAN 2: SAMPLE DATA
+-- ============================================================
+-- CATATAN: Generate bcrypt hash terlebih dahulu:
+-- node -e "require('bcryptjs').hash('password123',10,(e,h)=>console.log(h))"
+-- Ganti [bcrypt_hash] di bawah dengan hasil hash yang digenerate
+-- Semua user menggunakan password: password123
+-- ============================================================
+
+INSERT INTO users (name, email, password, role, department) VALUES
+('Admin Sistem',    'admin@proc.id',  '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'admin',      'IT'),
+('Budi Requester',  'budi@proc.id',   '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'requester',  'Operations'),
+('Sari Supervisor', 'sari@proc.id',   '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'supervisor', 'Operations'),
+('Doni Finance',    'doni@proc.id',   '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'finance',    'Finance'),
+('Rina Purchasing', 'rina@proc.id',   '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'purchasing', 'Purchasing');
+
+-- Items: 3 barang, 2 jasa
+INSERT INTO items (code, name, description, category, unit, estimated_price, created_by) VALUES
+('ITM-001', 'Laptop Dell Inspiron 15',       'Laptop untuk kebutuhan kerja',       'barang', 'unit',   12000000, 1),
+('ITM-002', 'Mouse Wireless Logitech MX',    'Mouse ergonomis wireless',            'barang', 'unit',    350000, 1),
+('ITM-003', 'Meja Kerja Ergonomis',          'Standing desk adjustable',            'barang', 'unit',   2500000, 1),
+('SVC-001', 'Jasa Instalasi Software',       'Instalasi dan konfigurasi software',  'jasa',   'paket',  5000000, 1),
+('SVC-002', 'Jasa Maintenance Jaringan',     'Pemeliharaan jaringan bulanan',       'jasa',   'bulan',  3000000, 1);
+
+-- Vendors: 3 vendor
+INSERT INTO vendors (code, name, contact_person, phone, email, bank_name, bank_account, bank_account_name, category, created_by) VALUES
+('VND-001', 'PT Teknologi Maju Bersama', 'Budi Santoso',  '08111111111', 'budi@teknomaju.id',    'BCA',    '1234567890', 'PT Teknologi Maju Bersama', 'IT Hardware', 1),
+('VND-002', 'CV Karya Solusi Mandiri',   'Ani Wulandari', '08222222222', 'ani@karyasolusi.id',   'Mandiri','0987654321', 'CV Karya Solusi Mandiri',   'Furniture',   1),
+('VND-003', 'PT Layanan Prima Utama',    'Cici Rahayu',   '08333333333', 'cici@layanprima.id',   'BNI',    '1122334455', 'PT Layanan Prima Utama',    'Services',    1);
