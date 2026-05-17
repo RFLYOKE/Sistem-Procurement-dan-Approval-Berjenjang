@@ -11,7 +11,6 @@ const approvalController = {
         try {
             const { request_id } = req.params;
 
-            // a. Ambil data procurement
             const procurement = await Approval.findRequestById(request_id);
             if (!procurement) {
                 return errorResponse(res, 'Pengajuan tidak ditemukan', 404);
@@ -19,12 +18,10 @@ const approvalController = {
 
             const currentStatus = procurement.status;
 
-            // b. Cek apakah role boleh approve di tahap ini
             if (!isAllowedToApprove(currentStatus, req.user.role)) {
                 return errorResponse(res, 'Anda tidak berhak approve di tahap ini', 403);
             }
 
-            // c. Tentukan next status
             let nextStatus;
             try {
                 nextStatus = getNextStatus(currentStatus);
@@ -32,10 +29,8 @@ const approvalController = {
                 return errorResponse(res, err.message, 400);
             }
 
-            // d. Update status procurement
             await Approval.updateStatus(procurement.id, nextStatus);
 
-            // e. Insert riwayat approval
             await Approval.createHistory({
                 request_id:    procurement.id,
                 approver_id:   req.user.id,
@@ -46,7 +41,6 @@ const approvalController = {
                 status_after:  nextStatus,
             });
 
-            // f. Response
             return successResponse(res, 'Pengajuan berhasil disetujui', {
                 id:             procurement.id,
                 request_number: procurement.request_number,
@@ -74,7 +68,6 @@ const approvalController = {
         try {
             const { request_id } = req.params;
 
-            // a. Ambil data procurement
             const procurement = await Approval.findRequestById(request_id);
             if (!procurement) {
                 return errorResponse(res, 'Pengajuan tidak ditemukan', 404);
@@ -82,25 +75,20 @@ const approvalController = {
 
             const currentStatus = procurement.status;
 
-            // b. Cek apakah bisa di-reject
             if (!canBeRejected(currentStatus)) {
                 return errorResponse(res, 'Pengajuan tidak bisa ditolak pada status ini', 400);
             }
 
-            // c. Cek apakah role boleh melakukan aksi ini
             if (!isAllowedToApprove(currentStatus, req.user.role)) {
                 return errorResponse(res, 'Anda tidak berhak melakukan aksi ini', 403);
             }
 
-            // d. Validasi: notes WAJIB diisi saat reject
             if (!req.body.notes || req.body.notes.trim() === '') {
                 return errorResponse(res, 'Catatan penolakan wajib diisi', 400);
             }
 
-            // e. Update status → rejected
             await Approval.updateStatus(procurement.id, 'rejected');
 
-            // f. Insert riwayat rejection
             await Approval.createHistory({
                 request_id:    procurement.id,
                 approver_id:   req.user.id,
@@ -111,7 +99,6 @@ const approvalController = {
                 status_after:  'rejected',
             });
 
-            // g. Response
             return successResponse(res, 'Pengajuan berhasil ditolak', {
                 id:             procurement.id,
                 request_number: procurement.request_number,
@@ -139,16 +126,13 @@ const approvalController = {
         try {
             const { request_id } = req.params;
 
-            // a. Validasi: procurement_requests exists
             const procurement = await Approval.findRequestById(request_id);
             if (!procurement) {
                 return errorResponse(res, 'Pengajuan tidak ditemukan', 404);
             }
 
-            // b. Query histories
             const histories = await Approval.findHistoriesByRequestId(request_id);
 
-            // c. Format response
             const formattedHistories = histories.map((h) => ({
                 id:            h.id,
                 action:        h.action,
@@ -182,7 +166,6 @@ const approvalController = {
      */
     getPendingApprovals: async (req, res) => {
         try {
-            // a. Tentukan statusList berdasarkan role
             const roleStatusMap = {
                 supervisor: ['submitted'],
                 finance:    ['approved_supervisor'],
@@ -195,7 +178,6 @@ const approvalController = {
                 return errorResponse(res, 'Role Anda tidak memiliki akses ke pending approvals', 403);
             }
 
-            // b. Query params
             const { department, priority, page = 1, limit = 10 } = req.query;
             const filters = {
                 department,
@@ -204,12 +186,10 @@ const approvalController = {
                 limit: Number(limit),
             };
 
-            // c. Query data & count
             const data = await Approval.findPendingByStatus(statusList, filters);
             const total = await Approval.countPending(statusList, filters);
             const totalPages = Math.ceil(total / filters.limit);
 
-            // d. Response dengan pagination
             return res.status(200).json({
                 success: true,
                 message: 'Berhasil mengambil data pending approvals',

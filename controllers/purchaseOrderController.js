@@ -31,7 +31,7 @@ const purchaseOrderController = {
                 return res.status(400).json({ success: false, message: 'Validasi gagal', errors });
             }
 
-            // a. Validasi procurement exists & status = approved_purchasing
+            // Validasi procurement exists & status = approved_purchasing
             const procurement = await Procurement.findById(request_id);
             if (!procurement) {
                 return errorResponse(res, 'Pengajuan tidak ditemukan', 404);
@@ -40,19 +40,19 @@ const purchaseOrderController = {
                 return errorResponse(res, 'Pengajuan belum disetujui untuk pembuatan PO', 400);
             }
 
-            // b. Validasi belum ada PO untuk request_id ini
+            // Validasi belum ada PO untuk request_id ini
             const existingPO = await PurchaseOrder.findByRequestId(request_id);
             if (existingPO) {
                 return errorResponse(res, 'PO sudah dibuat untuk pengajuan ini', 400);
             }
 
-            // c. Validasi vendor exists & active
+            // Validasi vendor exists & active
             const vendor = await Vendor.findById(vendor_id);
             if (!vendor) {
                 return errorResponse(res, 'Vendor tidak ditemukan atau tidak aktif', 404);
             }
 
-            // d. Validasi items
+            // Validasi items
             for (let i = 0; i < items.length; i++) {
                 const item = items[i];
                 if (!item.item_id) errors.push({ field: `items[${i}].item_id`, message: 'Item ID wajib diisi' });
@@ -76,13 +76,13 @@ const purchaseOrderController = {
             // Begin transaction
             await connection.beginTransaction();
 
-            // e. Generate PO number
+            // Generate PO number
             const po_number = await generatePONumber(connection);
 
-            // f. Calculate total_amount
+            // Calculate total_amount
             const total_amount = items.reduce((sum, item) => sum + (parseFloat(item.quantity) * parseFloat(item.unit_price)), 0);
 
-            // g. INSERT purchase_orders
+            // INSERT purchase_orders
             const poData = {
                 po_number,
                 request_id,
@@ -97,16 +97,16 @@ const purchaseOrderController = {
             };
             const poId = await PurchaseOrder.create(poData, connection);
 
-            // h. INSERT purchase_order_items
+            // INSERT purchase_order_items
             await PurchaseOrder.createItems(poId, items, connection);
 
-            // i. UPDATE procurement status → purchased
+            // UPDATE procurement status → purchased
             await connection.query(
                 `UPDATE procurement_requests SET status = 'purchased', updated_at = NOW() WHERE id = ?`,
                 [request_id]
             );
 
-            // j. INSERT approval_histories
+            // INSERT approval_histories
             await connection.query(
                 `INSERT INTO approval_histories (request_id, approver_id, role, action, notes, status_before, status_after)
                  VALUES (?, ?, ?, 'approved', 'Purchase Order telah dibuat', 'approved_purchasing', 'purchased')`,

@@ -27,7 +27,7 @@ const goodsReceiptController = {
                 return res.status(400).json({ success: false, message: 'Validasi gagal', errors });
             }
 
-            // a. Validasi PO exists & status IN (sent, confirmed)
+            // Validasi PO exists & status IN (sent, confirmed)
             const po = await PurchaseOrder.findById(po_id);
             if (!po) {
                 return errorResponse(res, 'Purchase Order tidak ditemukan', 404);
@@ -36,7 +36,7 @@ const goodsReceiptController = {
                 return errorResponse(res, 'PO belum siap untuk penerimaan barang', 400);
             }
 
-            // b. Items validation
+            // Items validation
             const poItems = await PurchaseOrder.findItems(po_id);
             const poItemMap = {};
             for (const poi of poItems) {
@@ -51,7 +51,7 @@ const goodsReceiptController = {
                     errors.push({ field: `items[${i}].quantity_received`, message: 'Quantity received harus lebih dari 0' });
                 }
 
-                // c. Cek quantity_received tidak melebihi sisa
+                // Cek quantity_received tidak melebihi sisa
                 if (item.po_item_id && item.quantity_received) {
                     const poItem = poItemMap[item.po_item_id];
                     if (!poItem) {
@@ -77,10 +77,10 @@ const goodsReceiptController = {
 
             await connection.beginTransaction();
 
-            // d. Generate GR number
+            // Generate GR number
             const gr_number = await generateGRNumber(connection);
 
-            // e. Check if all PO items will be fully received after this GR
+            // Check if all PO items will be fully received after this GR
             let allComplete = true;
             for (const poItem of poItems) {
                 const totalReceived = await GoodsReceipt.getTotalReceivedByPOItem(poItem.id);
@@ -97,7 +97,7 @@ const goodsReceiptController = {
 
             const grStatus = allComplete ? 'complete' : 'partial';
 
-            // f. INSERT goods_receipts
+            // INSERT goods_receipts
             const grData = {
                 gr_number,
                 po_id,
@@ -109,10 +109,10 @@ const goodsReceiptController = {
             };
             const grId = await GoodsReceipt.create(grData, connection);
 
-            // g. INSERT goods_receipt_items
+            // INSERT goods_receipt_items
             await GoodsReceipt.createItems(grId, items, connection);
 
-            // h. If complete → update procurement & PO status
+            // If complete → update procurement & PO status
             if (grStatus === 'complete') {
                 await connection.query(
                     `UPDATE procurement_requests SET status = 'received', updated_at = NOW() WHERE id = ?`,
