@@ -46,7 +46,6 @@ router.get(
 // Logout Route
 router.post(
     '/logout',
-    verifyToken,
     authController.logout
 );
 

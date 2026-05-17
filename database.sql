@@ -173,23 +173,14 @@ CREATE TABLE IF NOT EXISTS goods_receipt_items (
 -- Semua user menggunakan password: password123
 -- ============================================================
 
-INSERT INTO users (name, email, password, role, department) VALUES
-('Admin Sistem',    'admin@proc.id',  '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'admin',      'IT'),
-('Budi Requester',  'budi@proc.id',   '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'requester',  'Operations'),
-('Sari Supervisor', 'sari@proc.id',   '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'supervisor', 'Operations'),
-('Doni Finance',    'doni@proc.id',   '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'finance',    'Finance'),
-('Rina Purchasing', 'rina@proc.id',   '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'purchasing', 'Purchasing');
-
 -- Items: 3 barang, 2 jasa
 INSERT INTO items (code, name, description, category, unit, estimated_price, created_by) VALUES
-('ITM-001', 'Laptop Dell Inspiron 15',       'Laptop untuk kebutuhan kerja',       'barang', 'unit',   12000000, 1),
-('ITM-002', 'Mouse Wireless Logitech MX',    'Mouse ergonomis wireless',            'barang', 'unit',    350000, 1),
-('ITM-003', 'Meja Kerja Ergonomis',          'Standing desk adjustable',            'barang', 'unit',   2500000, 1),
-('SVC-001', 'Jasa Instalasi Software',       'Instalasi dan konfigurasi software',  'jasa',   'paket',  5000000, 1),
-('SVC-002', 'Jasa Maintenance Jaringan',     'Pemeliharaan jaringan bulanan',       'jasa',   'bulan',  3000000, 1);
+('ITM-006', 'Meja Kerja Ergonomis',          'Standing desk adjustable',            'barang', 'unit',   2500000, 1),
+('ITM-007', 'Mouse Wireless Logitech MX',    'Mouse ergonomis wireless',            'barang', 'unit',    350000, 1),
+('SVC-003', 'Jasa Maintenance Jaringan',     'Pemeliharaan jaringan bulanan',       'jasa',   'bulan',  3000000, 1),
+('SVC-004', 'Jasa Instalasi Software',       'Instalasi dan konfigurasi software',  'jasa',   'paket',  5000000, 1);
 
 -- Vendors: 3 vendor
 INSERT INTO vendors (code, name, contact_person, phone, email, bank_name, bank_account, bank_account_name, category, created_by) VALUES
-('VND-001', 'PT Teknologi Maju Bersama', 'Budi Santoso',  '08111111111', 'budi@teknomaju.id',    'BCA',    '1234567890', 'PT Teknologi Maju Bersama', 'IT Hardware', 1),
 ('VND-002', 'CV Karya Solusi Mandiri',   'Ani Wulandari', '08222222222', 'ani@karyasolusi.id',   'Mandiri','0987654321', 'CV Karya Solusi Mandiri',   'Furniture',   1),
 ('VND-003', 'PT Layanan Prima Utama',    'Cici Rahayu',   '08333333333', 'cici@layanprima.id',   'BNI',    '1122334455', 'PT Layanan Prima Utama',    'Services',    1);
