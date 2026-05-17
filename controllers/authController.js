@@ -25,7 +25,7 @@ const register = async (req, res) => {
         const hashedPassword = await bcrypt.hash(password, salt);
 
         // Save user to database
-        const userId = await userModel.createUser({
+        const userId = await userModel.createUser({ 
             name,
             email,
             password: hashedPassword,

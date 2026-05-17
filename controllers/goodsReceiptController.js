@@ -15,7 +15,6 @@ const goodsReceiptController = {
         try {
             const { po_id, received_date, notes, items } = req.body;
 
-            // Basic validation
             const errors = [];
             if (!po_id) errors.push({ field: 'po_id', message: 'PO ID wajib diisi' });
             if (!received_date) errors.push({ field: 'received_date', message: 'Tanggal penerimaan wajib diisi' });
