@@ -1,10 +1,9 @@
 -- ============================================================
 -- DATABASE: Sistem Procurement dan Approval Berjenjang
 -- Jalankan file ini untuk setup lengkap dari awal
+-- CATATAN: Untuk Aiven, script ini dijalankan langsung di 'defaultdb'
+--          Tidak perlu CREATE DATABASE / USE karena Aiven hanya izinkan 1 DB
 -- ============================================================
-
-CREATE DATABASE IF NOT EXISTS procurement_db;
-USE procurement_db;
 
 -- ============================================================
 -- BAGIAN 1: CREATE TABLES
@@ -167,11 +166,19 @@ CREATE TABLE IF NOT EXISTS goods_receipt_items (
 -- ============================================================
 -- BAGIAN 2: SAMPLE DATA
 -- ============================================================
--- CATATAN: Generate bcrypt hash terlebih dahulu:
--- node -e "require('bcryptjs').hash('password123',10,(e,h)=>console.log(h))"
--- Ganti [bcrypt_hash] di bawah dengan hasil hash yang digenerate
--- Semua user menggunakan password: password123
+-- CATATAN: Semua user menggunakan password: password123
+-- Untuk generate hash baru, jalankan perintah berikut di terminal:
+--   node -e "const b=require('bcryptjs');b.hash('password123',10,(e,h)=>console.log(h))"
 -- ============================================================
+
+-- Users: Admin default (password: password123)
+-- Hash berikut adalah bcrypt dari password123 (cost=10)
+INSERT INTO users (id, name, email, password, role, department, is_active) VALUES
+(1, 'Admin Sistem',    'admin@procurement.id',      '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 'admin',      'IT',       TRUE),
+(2, 'Budi Requester',  'budi@procurement.id',        '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 'requester',  'Umum',     TRUE),
+(3, 'Siti Supervisor', 'siti@procurement.id',        '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 'supervisor', 'Keuangan', TRUE),
+(4, 'Rudi Finance',    'rudi@procurement.id',        '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 'finance',    'Keuangan', TRUE),
+(5, 'Dewi Purchasing', 'dewi@procurement.id',        '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 'purchasing', 'Pengadaan',TRUE);
 
 -- Items: 3 barang, 2 jasa
 INSERT INTO items (code, name, description, category, unit, estimated_price, created_by) VALUES
@@ -180,7 +187,7 @@ INSERT INTO items (code, name, description, category, unit, estimated_price, cre
 ('SVC-003', 'Jasa Maintenance Jaringan',     'Pemeliharaan jaringan bulanan',       'jasa',   'bulan',  3000000, 1),
 ('SVC-004', 'Jasa Instalasi Software',       'Instalasi dan konfigurasi software',  'jasa',   'paket',  5000000, 1);
 
--- Vendors: 3 vendor
+-- Vendors: 2 vendor
 INSERT INTO vendors (code, name, contact_person, phone, email, bank_name, bank_account, bank_account_name, category, created_by) VALUES
 ('VND-002', 'CV Karya Solusi Mandiri',   'Ani Wulandari', '08222222222', 'ani@karyasolusi.id',   'Mandiri','0987654321', 'CV Karya Solusi Mandiri',   'Furniture',   1),
 ('VND-003', 'PT Layanan Prima Utama',    'Cici Rahayu',   '08333333333', 'cici@layanprima.id',   'BNI',    '1122334455', 'PT Layanan Prima Utama',    'Services',    1);

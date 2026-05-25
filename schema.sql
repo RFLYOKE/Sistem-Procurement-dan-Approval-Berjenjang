@@ -1,5 +1,8 @@
-CREATE DATABASE IF NOT EXISTS procurement_db;
-USE procurement_db;
+-- ============================================================
+-- DATABASE: Sistem Procurement dan Approval Berjenjang
+-- CATATAN: Untuk Aiven, jalankan langsung di 'defaultdb'
+--          Tidak perlu CREATE DATABASE / USE karena Aiven hanya izinkan 1 DB
+-- ============================================================
 
 CREATE TABLE IF NOT EXISTS users (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -13,9 +16,9 @@ CREATE TABLE IF NOT EXISTS users (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
-----------------------------------------------------
+-- --------------------------------------------------
 -- ENTITAS 1: Master Barang/Jasa
-----------------------------------------------------
+-- --------------------------------------------------
 CREATE TABLE IF NOT EXISTS items (
     id          INT AUTO_INCREMENT PRIMARY KEY,
     code        VARCHAR(50)  NOT NULL UNIQUE,
@@ -31,9 +34,9 @@ CREATE TABLE IF NOT EXISTS items (
     FOREIGN KEY (created_by) REFERENCES users(id)
 );
 
-----------------------------------------------------
+-- --------------------------------------------------
 -- ENTITAS 2: Master Vendor
-----------------------------------------------------
+-- --------------------------------------------------
 CREATE TABLE IF NOT EXISTS vendors (
     id                INT AUTO_INCREMENT PRIMARY KEY,
     code              VARCHAR(50)  NOT NULL UNIQUE,
@@ -54,9 +57,9 @@ CREATE TABLE IF NOT EXISTS vendors (
     FOREIGN KEY (created_by) REFERENCES users(id)
 );
 
-----------------------------------------------------
+-- --------------------------------------------------
 -- ENTITAS 3: Pengajuan Pengadaan (header)
-----------------------------------------------------
+-- --------------------------------------------------
 CREATE TABLE IF NOT EXISTS procurement_requests (
     id                    INT AUTO_INCREMENT PRIMARY KEY,
     request_number        VARCHAR(50) NOT NULL UNIQUE,
@@ -78,9 +81,9 @@ CREATE TABLE IF NOT EXISTS procurement_requests (
     FOREIGN KEY (requester_id) REFERENCES users(id)
 );
 
-----------------------------------------------------
+-- --------------------------------------------------
 -- RELASI: Detail Item per Pengajuan
-----------------------------------------------------
+-- --------------------------------------------------
 CREATE TABLE IF NOT EXISTS procurement_request_items (
     id              INT AUTO_INCREMENT PRIMARY KEY,
     request_id      INT NOT NULL,
@@ -97,9 +100,9 @@ CREATE TABLE IF NOT EXISTS procurement_request_items (
     FOREIGN KEY (item_id) REFERENCES items(id)
 );
 
-----------------------------------------------------
+-- --------------------------------------------------
 -- TABEL: Riwayat Approval Berjenjang
-----------------------------------------------------
+-- --------------------------------------------------
 CREATE TABLE IF NOT EXISTS approval_histories (
     id            INT AUTO_INCREMENT PRIMARY KEY,
     request_id    INT NOT NULL,
@@ -114,9 +117,9 @@ CREATE TABLE IF NOT EXISTS approval_histories (
     FOREIGN KEY (approver_id) REFERENCES users(id)
 );
 
-----------------------------------------------------
+-- --------------------------------------------------
 -- TABEL: Purchase Orders (header)
-----------------------------------------------------
+-- --------------------------------------------------
 CREATE TABLE IF NOT EXISTS purchase_orders (
     id                     INT AUTO_INCREMENT PRIMARY KEY,
     po_number              VARCHAR(50) NOT NULL UNIQUE,
@@ -139,9 +142,9 @@ CREATE TABLE IF NOT EXISTS purchase_orders (
     FOREIGN KEY (created_by) REFERENCES users(id)
 );
 
-----------------------------------------------------
+-- --------------------------------------------------
 -- TABEL: Detail Item per Purchase Order
-----------------------------------------------------
+-- --------------------------------------------------
 CREATE TABLE IF NOT EXISTS purchase_order_items (
     id          INT AUTO_INCREMENT PRIMARY KEY,
     po_id       INT NOT NULL,
@@ -157,9 +160,9 @@ CREATE TABLE IF NOT EXISTS purchase_order_items (
     FOREIGN KEY (item_id)  REFERENCES items(id)
 );
 
-----------------------------------------------------
+-- --------------------------------------------------
 -- TABEL: Goods Receipts (penerimaan barang)
-----------------------------------------------------
+-- --------------------------------------------------
 CREATE TABLE IF NOT EXISTS goods_receipts (
     id            INT AUTO_INCREMENT PRIMARY KEY,
     gr_number     VARCHAR(50) NOT NULL UNIQUE,
@@ -175,9 +178,9 @@ CREATE TABLE IF NOT EXISTS goods_receipts (
     FOREIGN KEY (received_by) REFERENCES users(id)
 );
 
-----------------------------------------------------
+-- --------------------------------------------------
 -- TABEL: Detail Item per Goods Receipt
-----------------------------------------------------
+-- --------------------------------------------------
 CREATE TABLE IF NOT EXISTS goods_receipt_items (
     id                INT AUTO_INCREMENT PRIMARY KEY,
     gr_id             INT NOT NULL,
