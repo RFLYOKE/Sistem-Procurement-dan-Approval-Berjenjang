@@ -18,10 +18,6 @@ const itemController = {
             else if (unit.length > 50) errors.push({ field: 'unit', message: 'Unit max 50 char' });
             if (estimated_price !== undefined && Number(estimated_price) < 0) errors.push({ field: 'estimated_price', message: 'Estimated price tidak boleh negatif' });
 
-            if (category === 'barang' && !req.file) {
-                errors.push({ field: 'image', message: 'Gambar wajib diupload untuk kategori barang' });
-            }
-
             if (errors.length > 0) {
                 return res.status(400).json({ success: false, message: 'Validasi gagal', errors });
             }
@@ -36,7 +32,7 @@ const itemController = {
                 code, name, description, category, unit, 
                 estimated_price: estimated_price || 0,
                 created_by: req.user.id,
-                image: req.file ? `/uploads/items/${req.file.filename}` : null
+                image: req.body.image || null
             };
 
             const insertId = await Item.create(itemData);
@@ -110,7 +106,7 @@ const itemController = {
                 description: description || item.description,
                 unit: unit || item.unit,
                 estimated_price: estimated_price !== undefined ? estimated_price : item.estimated_price,
-                image: req.file ? `/uploads/items/${req.file.filename}` : item.image
+                image: req.body.image !== undefined ? req.body.image : item.image
             });
 
             const updatedItem = await Item.findById(id);
