@@ -68,7 +68,7 @@ CREATE TABLE IF NOT EXISTS procurement_requests (
     requester_id          INT NOT NULL,
     department            VARCHAR(100),
     required_date         DATE,
-    total_estimated_price DECIMAL(15,2) DEFAULT 0,
+    total_estimated_price BIGINT DEFAULT 0,
     status ENUM(
         'draft','submitted','approved_supervisor',
         'approved_finance','approved_purchasing',
@@ -90,8 +90,8 @@ CREATE TABLE IF NOT EXISTS procurement_request_items (
     item_id         INT NOT NULL,
     quantity        DECIMAL(10,2) NOT NULL,
     unit            VARCHAR(50),
-    estimated_price DECIMAL(15,2) NOT NULL,
-    total_price     DECIMAL(15,2) GENERATED ALWAYS AS
+    estimated_price BIGINT NOT NULL,
+    total_price     BIGINT GENERATED ALWAYS AS
                     (quantity * estimated_price) STORED,
     notes           TEXT,
     created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -128,7 +128,7 @@ CREATE TABLE IF NOT EXISTS purchase_orders (
     created_by             INT NOT NULL,
     po_date                DATE NOT NULL,
     expected_delivery_date DATE,
-    total_amount           DECIMAL(15,2) NOT NULL DEFAULT 0,
+    total_amount           BIGINT NOT NULL DEFAULT 0,
     status ENUM('draft','sent','confirmed','completed','cancelled')
            DEFAULT 'draft',
     payment_terms          VARCHAR(100),
@@ -151,8 +151,8 @@ CREATE TABLE IF NOT EXISTS purchase_order_items (
     item_id     INT NOT NULL,
     quantity    DECIMAL(10,2) NOT NULL,
     unit        VARCHAR(50),
-    unit_price  DECIMAL(15,2) NOT NULL,
-    total_price DECIMAL(15,2) GENERATED ALWAYS AS
+    unit_price  BIGINT NOT NULL,
+    total_price BIGINT GENERATED ALWAYS AS
                 (quantity * unit_price) STORED,
     notes       TEXT,
     FOREIGN KEY (po_id)    REFERENCES purchase_orders(id)

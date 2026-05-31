@@ -129,7 +129,7 @@ const procurementModel = {
     },
 
     calculateTotal: (items) => {
-        return items.reduce((sum, item) => sum + (parseFloat(item.quantity) * parseFloat(item.estimated_price)), 0);
+        return items.reduce((sum, item) => sum + Math.round(parseFloat(item.quantity) * parseInt(item.estimated_price, 10)), 0);
     }
 };
 

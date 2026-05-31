@@ -52,25 +52,44 @@ const purchaseOrderController = {
                 return errorResponse(res, 'Vendor tidak ditemukan atau tidak aktif', 404);
             }
 
+            // Ambil data items dari PR untuk validasi
+            const prItems = await Procurement.findItems(request_id);
+            if (items.length !== prItems.length) {
+                errors.push({ field: 'items', message: `Jumlah jenis item tidak sesuai dengan Procurement Request (PR ada ${prItems.length} item, PO ada ${items.length} item)` });
+            }
+
             // Validasi items
             for (let i = 0; i < items.length; i++) {
                 const item = items[i];
-                if (!item.item_id) errors.push({ field: `items[${i}].item_id`, message: 'Item ID wajib diisi' });
+                if (!item.item_id) {
+                    errors.push({ field: `items[${i}].item_id`, message: 'Item ID wajib diisi' });
+                    continue;
+                }
                 if (!item.quantity || Number(item.quantity) <= 0) errors.push({ field: `items[${i}].quantity`, message: 'Quantity harus lebih dari 0' });
                 if (item.unit_price === undefined || Number(item.unit_price) < 0) errors.push({ field: `items[${i}].unit_price`, message: 'Unit price tidak boleh negatif' });
 
-                if (item.item_id) {
-                    const existingItem = await Item.findById(item.item_id);
-                    if (!existingItem) {
-                        errors.push({ field: `items[${i}].item_id`, message: `Item dengan ID ${item.item_id} tidak ditemukan` });
+                const existingItem = await Item.findById(item.item_id);
+                if (!existingItem) {
+                    errors.push({ field: `items[${i}].item_id`, message: `Item dengan ID ${item.item_id} tidak ditemukan` });
+                } else {
+                    item.unit = item.unit || existingItem.unit;
+                    // Cek kecocokan dengan PR
+                    const prItem = prItems.find(p => p.item_id === item.item_id);
+                    if (!prItem) {
+                        errors.push({ field: `items[${i}].item_id`, message: `Item '${existingItem.name}' tidak terdapat pada Procurement Request` });
                     } else {
-                        item.unit = item.unit || existingItem.unit;
+                        if (Number(item.quantity) !== Number(prItem.quantity)) {
+                            errors.push({ field: `items[${i}].quantity`, message: `Item '${existingItem.name}': Quantity tidak match (PR: ${prItem.quantity}, PO: ${item.quantity})` });
+                        }
+                        if (parseInt(item.unit_price, 10) !== parseInt(prItem.estimated_price, 10)) {
+                            errors.push({ field: `items[${i}].unit_price`, message: `Item '${existingItem.name}': Harga tidak match (PR: ${prItem.estimated_price}, PO: ${item.unit_price})` });
+                        }
                     }
                 }
             }
 
             if (errors.length > 0) {
-                return res.status(400).json({ success: false, message: 'Validasi gagal', errors });
+                return res.status(400).json({ success: false, message: 'Validasi gagal, data tidak sesuai dengan Procurement Request', errors });
             }
 
             // Begin transaction
@@ -80,7 +99,7 @@ const purchaseOrderController = {
             const po_number = await generatePONumber(connection);
 
             // Calculate total_amount
-            const total_amount = items.reduce((sum, item) => sum + (parseFloat(item.quantity) * parseFloat(item.unit_price)), 0);
+            const total_amount = items.reduce((sum, item) => sum + Math.round(parseFloat(item.quantity) * parseInt(item.unit_price, 10)), 0);
 
             // INSERT purchase_orders
             const poData = {
