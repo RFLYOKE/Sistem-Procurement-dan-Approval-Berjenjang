@@ -56,22 +56,22 @@ const itemModel = {
     },
 
     create: async (data) => {
-        const { code, name, description, category, unit, estimated_price, created_by } = data;
+        const { code, name, description, category, unit, estimated_price, created_by, image } = data;
         const [result] = await pool.query(
-            `INSERT INTO items (code, name, description, category, unit, estimated_price, created_by)
-             VALUES (?, ?, ?, ?, ?, ?, ?)`,
-            [code, name, description, category, unit, estimated_price || 0, created_by]
+            `INSERT INTO items (code, name, description, category, unit, estimated_price, created_by, image)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+            [code, name, description, category, unit, estimated_price || 0, created_by, image || null]
         );
         return result.insertId;
     },
 
     update: async (id, data) => {
-        const { name, description, unit, estimated_price } = data;
+        const { name, description, unit, estimated_price, image } = data;
         const [result] = await pool.query(
             `UPDATE items 
-             SET name = ?, description = ?, unit = ?, estimated_price = ?
+             SET name = ?, description = ?, unit = ?, estimated_price = ?, image = COALESCE(?, image)
              WHERE id = ?`,
-            [name, description, unit, estimated_price, id]
+            [name, description, unit, estimated_price, image || null, id]
         );
         return result.affectedRows;
     },

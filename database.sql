@@ -28,6 +28,7 @@ CREATE TABLE IF NOT EXISTS items (
     description     TEXT,
     category        ENUM('barang','jasa') NOT NULL,
     unit            VARCHAR(50)  NOT NULL,
+    image           VARCHAR(255),
     estimated_price DECIMAL(15,2) DEFAULT 0,
     is_active       BOOLEAN DEFAULT TRUE,
     created_by      INT,
