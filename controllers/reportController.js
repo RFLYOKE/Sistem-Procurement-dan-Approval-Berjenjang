@@ -1,15 +1,7 @@
 const Report = require('../models/reportModel');
 const { successResponse, errorResponse } = require('../utils/response');
 
-/**
- * Helper: default period = first day of current month → today
- */
-const getDefaultPeriod = (startDate, endDate) => {
-    const now = new Date();
-    const start = startDate || new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
-    const end   = endDate   || now.toISOString().split('T')[0];
-    return { start, end: end + ' 23:59:59' };
-};
+// helper removed as dates are now mandatory
 
 const reportController = {
     /**
@@ -18,7 +10,11 @@ const reportController = {
     getProcurementReport: async (req, res) => {
         try {
             const { start_date, end_date, status, department, page = 1, limit = 10 } = req.query;
-            const { start, end } = getDefaultPeriod(start_date, end_date);
+            if (!start_date || !end_date) {
+                return errorResponse(res, 'start_date dan end_date wajib disertakan', 400);
+            }
+            const start = start_date;
+            const end = end_date + ' 23:59:59';
 
             const filters = { startDate: start, endDate: end, status, department };
 
@@ -60,7 +56,11 @@ const reportController = {
     getVendorReport: async (req, res) => {
         try {
             const { start_date, end_date, vendor_id } = req.query;
-            const { start, end } = getDefaultPeriod(start_date, end_date);
+            if (!start_date || !end_date) {
+                return errorResponse(res, 'start_date dan end_date wajib disertakan', 400);
+            }
+            const start = start_date;
+            const end = end_date + ' 23:59:59';
 
             const vendors = await Report.getVendorReport({
                 startDate: start,
@@ -92,7 +92,11 @@ const reportController = {
     getApprovalPerformanceReport: async (req, res) => {
         try {
             const { start_date, end_date } = req.query;
-            const { start, end } = getDefaultPeriod(start_date, end_date);
+            if (!start_date || !end_date) {
+                return errorResponse(res, 'start_date dan end_date wajib disertakan', 400);
+            }
+            const start = start_date;
+            const end = end_date + ' 23:59:59';
 
             const rows = await Report.getApprovalPerformance({ startDate: start, endDate: end });
 

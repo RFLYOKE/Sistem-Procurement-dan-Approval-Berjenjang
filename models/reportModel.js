@@ -156,7 +156,7 @@ const reportModel = {
             JOIN procurement_requests pr ON ah.request_id = pr.id
             JOIN users u ON ah.approver_id = u.id
             WHERE ah.created_at BETWEEN ? AND ?
-            GROUP BY ah.role, ah.approver_id
+            GROUP BY ah.status_before, ah.role, ah.approver_id, u.name
             ORDER BY ah.role
         `, [startDate, endDate]);
         return rows;
