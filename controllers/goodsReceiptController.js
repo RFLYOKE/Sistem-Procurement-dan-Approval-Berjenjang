@@ -56,6 +56,9 @@ const goodsReceiptController = {
                     if (!poItem) {
                         errors.push({ field: `items[${i}].po_item_id`, message: `PO Item ID ${item.po_item_id} tidak ditemukan` });
                     } else {
+                        if (Number(item.item_id) !== Number(poItem.item_id)) {
+                            errors.push({ field: `items[${i}].item_id`, message: `Item ID tidak terdaftar atau tidak cocok dengan data Purchase Order` });
+                        }
                         const totalReceived = await GoodsReceipt.getTotalReceivedByPOItem(item.po_item_id);
                         const remaining = parseFloat(poItem.quantity) - totalReceived;
                         if (Number(item.quantity_received) > remaining) {
