@@ -31,8 +31,7 @@ const itemController = {
             const itemData = {
                 code, name, description, category, unit, 
                 estimated_price: estimated_price || 0,
-                created_by: req.user.id,
-                image: req.body.image || null
+                created_by: req.user.id
             };
 
             const insertId = await Item.create(itemData);
@@ -105,8 +104,7 @@ const itemController = {
                 name: name || item.name,
                 description: description || item.description,
                 unit: unit || item.unit,
-                estimated_price: estimated_price !== undefined ? estimated_price : item.estimated_price,
-                image: req.body.image !== undefined ? req.body.image : item.image
+                estimated_price: estimated_price !== undefined ? estimated_price : item.estimated_price
             });
 
             const updatedItem = await Item.findById(id);
