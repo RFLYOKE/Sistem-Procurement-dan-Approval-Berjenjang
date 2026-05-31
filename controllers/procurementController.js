@@ -4,6 +4,28 @@ const { generateRequestNumber } = require('../utils/generateNumber');
 const { successResponse, errorResponse } = require('../utils/response');
 const pool = require('../config/database');
 
+const validateItems = async (items, errors) => {
+    if (!items || !Array.isArray(items) || items.length === 0) {
+        errors.push({ field: 'items', message: 'Items wajib diisi minimal 1 elemen' });
+    } else {
+        for (let i = 0; i < items.length; i++) {
+            const item = items[i];
+            if (!item.item_id) errors.push({ field: `items[${i}].item_id`, message: 'Item ID wajib diisi' });
+            if (!item.quantity || Number(item.quantity) <= 0) errors.push({ field: `items[${i}].quantity`, message: 'Quantity harus lebih dari 0' });
+            if (item.estimated_price === undefined || Number(item.estimated_price) < 0) errors.push({ field: `items[${i}].estimated_price`, message: 'Estimated price tidak boleh negatif' });
+            
+            if (item.item_id) {
+                const existingItem = await Item.findById(item.item_id);
+                if (!existingItem) {
+                    errors.push({ field: `items[${i}].item_id`, message: `Item dengan ID ${item.item_id} tidak ditemukan atau tidak aktif` });
+                } else {
+                    item.unit = item.unit || existingItem.unit;
+                }
+            }
+        }
+    }
+};
+
 const procurementController = {
     createProcurement: async (req, res) => {
         const connection = await pool.getConnection();
@@ -28,27 +50,7 @@ const procurementController = {
                 }
             }
 
-            if (!items || !Array.isArray(items) || items.length === 0) {
-                errors.push({ field: 'items', message: 'Items wajib diisi minimal 1 elemen' });
-            } else {
-                for (let i = 0; i < items.length; i++) {
-                    const item = items[i];
-                    if (!item.item_id) errors.push({ field: `items[${i}].item_id`, message: 'Item ID wajib diisi' });
-                    if (!item.quantity || Number(item.quantity) <= 0) errors.push({ field: `items[${i}].quantity`, message: 'Quantity harus lebih dari 0' });
-                    if (item.estimated_price === undefined || Number(item.estimated_price) < 0) errors.push({ field: `items[${i}].estimated_price`, message: 'Estimated price tidak boleh negatif' });
-                    
-                    // Check item existence
-                    if (item.item_id) {
-                        const existingItem = await Item.findById(item.item_id);
-                        if (!existingItem) {
-                            errors.push({ field: `items[${i}].item_id`, message: `Item dengan ID ${item.item_id} tidak ditemukan atau tidak aktif` });
-                        } else {
-                            // default unit
-                            item.unit = item.unit || existingItem.unit;
-                        }
-                    }
-                }
-            }
+            await validateItems(items, errors);
 
             if (errors.length > 0) {
                 return res.status(400).json({ success: false, message: 'Validasi gagal', errors });
@@ -202,25 +204,7 @@ const procurementController = {
             }
 
             if (items) {
-                if (!Array.isArray(items) || items.length === 0) {
-                    errors.push({ field: 'items', message: 'Items wajib diisi minimal 1 elemen' });
-                } else {
-                    for (let i = 0; i < items.length; i++) {
-                        const item = items[i];
-                        if (!item.item_id) errors.push({ field: `items[${i}].item_id`, message: 'Item ID wajib diisi' });
-                        if (!item.quantity || Number(item.quantity) <= 0) errors.push({ field: `items[${i}].quantity`, message: 'Quantity harus lebih dari 0' });
-                        if (item.estimated_price === undefined || Number(item.estimated_price) < 0) errors.push({ field: `items[${i}].estimated_price`, message: 'Estimated price tidak boleh negatif' });
-                        
-                        if (item.item_id) {
-                            const existingItem = await Item.findById(item.item_id);
-                            if (!existingItem) {
-                                errors.push({ field: `items[${i}].item_id`, message: `Item dengan ID ${item.item_id} tidak ditemukan atau tidak aktif` });
-                            } else {
-                                item.unit = item.unit || existingItem.unit;
-                            }
-                        }
-                    }
-                }
+                await validateItems(items, errors);
             }
 
             if (errors.length > 0) {

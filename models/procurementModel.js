@@ -1,5 +1,33 @@
 const pool = require('../config/database');
 
+const buildWhereClause = ({ requesterId, status, priority, startDate, endDate }) => {
+    let condition = '';
+    const params = [];
+
+    if (requesterId) {
+        condition += ` AND pr.requester_id = ?`;
+        params.push(requesterId);
+    }
+    if (status) {
+        condition += ` AND pr.status = ?`;
+        params.push(status);
+    }
+    if (priority) {
+        condition += ` AND pr.priority = ?`;
+        params.push(priority);
+    }
+    if (startDate) {
+        condition += ` AND pr.created_at >= ?`;
+        params.push(startDate);
+    }
+    if (endDate) {
+        condition += ` AND pr.created_at <= ?`;
+        params.push(endDate);
+    }
+
+    return { condition, params };
+};
+
 const procurementModel = {
     findAll: async ({ requesterId, status, priority, startDate, endDate, page, limit }) => {
         let query = `
@@ -8,28 +36,9 @@ const procurementModel = {
             JOIN users u ON pr.requester_id = u.id
             WHERE 1=1
         `;
-        const params = [];
 
-        if (requesterId) {
-            query += ` AND pr.requester_id = ?`;
-            params.push(requesterId);
-        }
-        if (status) {
-            query += ` AND pr.status = ?`;
-            params.push(status);
-        }
-        if (priority) {
-            query += ` AND pr.priority = ?`;
-            params.push(priority);
-        }
-        if (startDate) {
-            query += ` AND pr.created_at >= ?`;
-            params.push(startDate);
-        }
-        if (endDate) {
-            query += ` AND pr.created_at <= ?`;
-            params.push(endDate);
-        }
+        const { condition, params } = buildWhereClause({ requesterId, status, priority, startDate, endDate });
+        query += condition;
 
         query += ` ORDER BY pr.id DESC`;
 
@@ -45,28 +54,9 @@ const procurementModel = {
 
     countAll: async ({ requesterId, status, priority, startDate, endDate }) => {
         let query = `SELECT COUNT(*) as total FROM procurement_requests pr WHERE 1=1`;
-        const params = [];
 
-        if (requesterId) {
-            query += ` AND pr.requester_id = ?`;
-            params.push(requesterId);
-        }
-        if (status) {
-            query += ` AND pr.status = ?`;
-            params.push(status);
-        }
-        if (priority) {
-            query += ` AND pr.priority = ?`;
-            params.push(priority);
-        }
-        if (startDate) {
-            query += ` AND pr.created_at >= ?`;
-            params.push(startDate);
-        }
-        if (endDate) {
-            query += ` AND pr.created_at <= ?`;
-            params.push(endDate);
-        }
+        const { condition, params } = buildWhereClause({ requesterId, status, priority, startDate, endDate });
+        query += condition;
 
         const [rows] = await pool.query(query, params);
         return rows[0].total;
