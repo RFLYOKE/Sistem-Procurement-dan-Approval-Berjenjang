@@ -51,7 +51,7 @@ const vendorModel = {
     },
 
     findByCode: async (code) => {
-        const [rows] = await pool.query(`SELECT * FROM vendors WHERE code = ?`, [code]);
+        const [rows] = await pool.query(`SELECT * FROM vendors WHERE code = ? AND is_active = true`, [code]);
         return rows[0];
     },
 
@@ -77,7 +77,7 @@ const vendorModel = {
     },
 
     softDelete: async (id) => {
-        const [result] = await pool.query(`UPDATE vendors SET is_active = false WHERE id = ?`, [id]);
+        const [result] = await pool.query(`UPDATE vendors SET is_active = false, code = CONCAT(code, '-del-', ?) WHERE id = ?`, [id, id]);
         return result.affectedRows;
     }
 };

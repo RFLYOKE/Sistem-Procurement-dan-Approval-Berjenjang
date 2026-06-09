@@ -51,7 +51,7 @@ const itemModel = {
     },
 
     findByCode: async (code) => {
-        const [rows] = await pool.query(`SELECT * FROM items WHERE code = ?`, [code]);
+        const [rows] = await pool.query(`SELECT * FROM items WHERE code = ? AND is_active = true`, [code]);
         return rows[0];
     },
 
@@ -77,7 +77,7 @@ const itemModel = {
     },
 
     softDelete: async (id) => {
-        const [result] = await pool.query(`UPDATE items SET is_active = false WHERE id = ?`, [id]);
+        const [result] = await pool.query(`UPDATE items SET is_active = false, code = CONCAT(code, '-del-', ?) WHERE id = ?`, [id, id]);
         return result.affectedRows;
     }
 };
