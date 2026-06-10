@@ -13,13 +13,19 @@ const goodsReceiptController = {
     createGoodsReceipt: async (req, res) => {
         const connection = await pool.getConnection();
         try {
-            const { po_id, received_date, notes, items } = req.body;
+            let { po_id, received_date, notes, items } = req.body;
 
             const errors = [];
             if (!po_id) errors.push({ field: 'po_id', message: 'PO ID wajib diisi' });
             if (!received_date) errors.push({ field: 'received_date', message: 'Tanggal penerimaan wajib diisi' });
+
+            // Filter items that have quantity > 0 to support partial receive form submission
+            if (items && Array.isArray(items)) {
+                items = items.filter(item => item.quantity_received && Number(item.quantity_received) > 0);
+            }
+
             if (!items || !Array.isArray(items) || items.length === 0) {
-                errors.push({ field: 'items', message: 'Items wajib diisi minimal 1' });
+                errors.push({ field: 'items', message: 'Items wajib diisi minimal 1 item dengan quantity > 0' });
             }
 
             if (errors.length > 0) {
